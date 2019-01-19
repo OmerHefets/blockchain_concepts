@@ -1,5 +1,6 @@
 import secrets
 import ecdsa
+import codecs
 
 ECDSA_CURVE_ORDER = 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'
 
@@ -13,4 +14,16 @@ def generate_private_key():
     return hex_private_key
 
 
-# print(ecdsa.SigningKey.generate(curve=ecdsa.SECP256k1).get_verifying_key().to_string())
+def generate_public_key(hex_private_key):
+    bytes_private_key = codecs.decode(hex_private_key, 'hex')
+    bytes_public_key = ecdsa.SigningKey.from_string(bytes_private_key, curve=ecdsa.SECP256k1).get_verifying_key().to_string()
+    hex_public_key = codecs.encode(bytes_public_key, 'hex')
+    # modify pub_key display
+    hex_public_key = hex(int(hex_public_key, 16))[2:]
+    return hex_public_key
+
+
+priv = generate_private_key()
+print(priv)
+print(generate_public_key(priv))
+
