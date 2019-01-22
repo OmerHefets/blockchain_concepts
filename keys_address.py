@@ -73,12 +73,14 @@ def fix_key_length(key, requested_sized):
         sys.exit("Unidentified Error")
 
 
-base58check('3a64', '00')
+def generate():
+    privKey = generate_private_key()
+    pubKey = generate_public_key(privKey)
+    addr = generate_address(pubKey)
+    print("The private key:\n{}".format(privKey))
+    print("The public key:\n{}".format(pubKey))
+    print("The address:\n{}".format(addr))
+    return privKey, pubKey, addr
 
 
-priv = generate_private_key()
-print(priv)
-pub = generate_public_key(priv)
-print(pub)
-add = generate_address(pub)
-print(add)
+(private_key, public_key, address) = generate()
