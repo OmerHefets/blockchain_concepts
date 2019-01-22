@@ -7,6 +7,11 @@ import hashlib
 
 
 ECDSA_CURVE_ORDER = 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141'
+UNCOMP_PUBKEY_PREFIX = '04'
+COMP_PUBKEY_ODD_PREFIX = '03'
+COMP_PUBKEY_EVEN_PREFIX = '02'
+PRIVKEY_PREFIX = '80'
+ADDRESS_PREFIX = '00'
 
 
 def generate_private_key():
@@ -33,6 +38,13 @@ def generate_public_key(hex_private_key):
     return hex_public_key
 
 
+def compress_pubkey(hex_pub_key):
+    if int(hex_pub_key[127:128], 16) % 2:
+        return COMP_PUBKEY_ODD_PREFIX + hex_pub_key[0:64]
+    else:
+        return COMP_PUBKEY_EVEN_PREFIX + hex_pub_key[0:64]
+
+
 def generate_address(hex_public_key):
     # encode the key for hashing
     hex_public_key = hex_public_key.encode('utf-8')
@@ -42,7 +54,7 @@ def generate_address(hex_public_key):
     h = hashlib.new('ripemd160')
     h.update(hashed_sha256_pubkey)
     pub_key_hash = h.hexdigest()
-    return base58check(pub_key_hash, '00')
+    return base58check(pub_key_hash, ADDRESS_PREFIX)
 
 
 def base58check(payload, version):
@@ -73,14 +85,25 @@ def fix_key_length(key, requested_sized):
         sys.exit("Unidentified Error")
 
 
-def generate():
+def generate(compress):
     privKey = generate_private_key()
     pubKey = generate_public_key(privKey)
-    addr = generate_address(pubKey)
-    print("The private key:\n{}".format(privKey))
-    print("The public key:\n{}".format(pubKey))
-    print("The address:\n{}".format(addr))
+    if not compress:
+        addr = generate_address(pubKey)
+        print("The private key (hex):\n{}".format(privKey))
+        print("The private key (base58):\n{}".format(base58check(privKey, PRIVKEY_PREFIX)))
+        print("The public key (hex):\n{}".format(UNCOMP_PUBKEY_PREFIX + pubKey))
+        print("The address:\n{}".format(addr))
+    else:
+        privKey += '01'
+        pubKey = compress_pubkey(pubKey)
+        addr = generate_address(pubKey)
+        print("The private key (hex):\n{}".format(privKey))
+        print("The private key (base58):\n{}".format(base58check(privKey, PRIVKEY_PREFIX)))
+        print("The public key (hex):\n{}".format(pubKey))
+        print("The address:\n{}".format(addr))
+
     return privKey, pubKey, addr
 
 
-(private_key, public_key, address) = generate()
+(private_key, public_key, address) = generate(compress=True)
